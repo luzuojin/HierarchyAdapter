@@ -1,0 +1,33 @@
+<idea-plugin>
+    <id>dev.xframe.HierarchyAdapter</id>
+    <name>HierarchyAdapter</name>
+    <vendor email="luzuojin@gmail.com" url="http://www.github.com/luzuojin">luzj</vendor>
+
+    <description><![CDATA[
+    Trigger standard hierarchy actions `Type Hierarchy` Or `Method Hierarchy` decided by selected source element in editor. <br/>
+    Trigger `Type Hierarchy` when Class element selected. <br/>
+    Trigger `Method Hierarchy` when Method element selected. <br/>
+    Default use key[alt+T] to trigger action. <br/>
+    Add Java Class support to `Call Hierarchy`. <br/>
+    ]]></description>
+
+    <!-- please see https://plugins.jetbrains.com/docs/intellij/plugin-compatibility.html
+         on how to target different products -->
+    <depends>com.intellij.modules.platform</depends>
+    <depends>com.intellij.java</depends>
+
+    <extensions defaultExtensionNs="com.intellij">
+        <callHierarchyProvider language="JAVA"  implementationClass="dev.xframe.hierarchy.CallHierarchyProvider"/>
+    </extensions>
+
+    <actions>
+        <action id="dev.xframe.hierarchy.OpenHierarchyAction" class="dev.xframe.hierarchy.OpenHierarchyAction" text="Type|Method Hierarchy"
+                description="Type|Method Hierarchy">
+            <keyboard-shortcut first-keystroke="alt T" keymap="$default"/>
+        </action>
+        <action id="dev.xframe.hierarchy.FindDeclarationAction" class="dev.xframe.hierarchy.FindDeclarationAction" text="Find Declaration"
+                description="Find Declaration">
+            <keyboard-shortcut first-keystroke="alt M" keymap="$default"/>
+        </action>
+    </actions>
+</idea-plugin>
