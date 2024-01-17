@@ -3,16 +3,18 @@ plugins {
 }
 
 group 'dev.xframe'
-version '1.0.3'
+version '1.0.4'
 
 // See https://github.com/JetBrains/gradle-intellij-plugin/
 intellij {
     version = '2021.3'
+    updateSinceUntilBuild = false
     plugins = ['com.intellij.java']
 }
 
 patchPluginXml {
     changeNotes = """
+    1.0.4: Fix idea version compatible
     1.0.3 support java type call hierarchy <br/>
     1.0.1 support when code block element selected
     """
