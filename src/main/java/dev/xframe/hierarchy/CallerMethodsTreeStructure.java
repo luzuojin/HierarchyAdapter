@@ -22,6 +22,7 @@ import com.intellij.psi.PsiQualifiedReference;
 import com.intellij.psi.PsiReference;
 import com.intellij.psi.PsiType;
 import com.intellij.psi.search.SearchScope;
+import com.intellij.psi.search.searches.ClassInheritorsSearch;
 import com.intellij.psi.search.searches.MethodReferencesSearch;
 import com.intellij.psi.search.searches.ReferencesSearch;
 import com.intellij.psi.util.InheritanceUtil;
@@ -31,6 +32,7 @@ import com.intellij.util.ArrayUtilRt;
 import com.intellij.util.containers.ContainerUtil;
 import org.jetbrains.annotations.NotNull;
 
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -65,12 +67,15 @@ public class CallerMethodsTreeStructure extends HierarchyTreeStructure {
         if (nodeDescriptor == null) return ArrayUtilRt.EMPTY_OBJECT_ARRAY;
 
         if(enclosingElement instanceof PsiClass) {
-            return ReferencesSearch
-                    .search(enclosingElement, enclosingElement.getUseScope()).findAll().stream()
-                    .map(PsiReference::getElement)
-                    .filter(this::isClassReferenceMatched)
-                    .distinct()
-                    .map(e -> new CallHierarchyNodeDescriptor(myProject, nodeDescriptor, e, false, false)).toArray();
+            PsiClass psiClass = (PsiClass) enclosingElement;
+            //search by constructors
+            Object[] children = Arrays.stream(psiClass.getConstructors()).map(e -> new CallHierarchyNodeDescriptor(myProject, nodeDescriptor, e, false, false)).toArray();
+            if(children.length > 0) return children;
+            //search by sub classes;
+            children = ClassInheritorsSearch.search(psiClass).findAll().stream().map(e -> new CallHierarchyNodeDescriptor(myProject, nodeDescriptor, e, false, false)).toArray();
+            if(children.length > 0) return children;
+            //search by reference
+            return ReferencesSearch.search(psiClass, psiClass.getUseScope()).findAll().stream().map(PsiReference::getElement).filter(this::isClassReferenceMatched).distinct().map(e -> new CallHierarchyNodeDescriptor(myProject, nodeDescriptor, e, false, false)).toArray();
         }
 
         PsiClass enclosingClass = enclosingElement.getContainingClass();
