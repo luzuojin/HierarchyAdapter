@@ -15,7 +15,6 @@ import com.intellij.psi.PsiClass;
 import com.intellij.psi.PsiDocumentManager;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiMember;
-import com.intellij.psi.PsiTypeElement;
 import com.intellij.ui.PopupHandler;
 import org.jetbrains.annotations.Nls;
 import org.jetbrains.annotations.NotNull;
@@ -48,12 +47,7 @@ public class FindDeclarationAction extends AnAction {
                 @Override
                 protected HierarchyTreeStructure createHierarchyTreeStructure(@NotNull String typeName, @NotNull PsiElement psiElement) {
                     if (viewType().equals(typeName)) {
-                        return new CallerMethodsTreeStructure(myProject, (PsiMember)psiElement, getCurrentScopeType()) {
-                            @Override
-                            protected boolean isClassReferenceMatched(PsiElement e) {
-                                return e instanceof PsiTypeElement || e.getParent() instanceof PsiTypeElement;
-                            }
-                        };
+                        return new DeclarationsTreeStructure(myProject, (PsiMember)psiElement, getCurrentScopeType());
                     }
                     return null;
                 }

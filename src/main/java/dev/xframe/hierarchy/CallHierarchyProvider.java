@@ -8,14 +8,19 @@ import com.intellij.ide.hierarchy.call.CallHierarchyBrowser;
 import com.intellij.ide.hierarchy.call.CalleeMethodsTreeStructure;
 import com.intellij.openapi.actionSystem.CommonDataKeys;
 import com.intellij.openapi.actionSystem.DataContext;
+import com.intellij.openapi.editor.Editor;
 import com.intellij.openapi.project.Project;
+import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.psi.PsiClass;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiField;
+import com.intellij.psi.PsiFile;
+import com.intellij.psi.PsiManager;
 import com.intellij.psi.PsiMember;
 import com.intellij.psi.PsiMethod;
 import com.intellij.psi.util.PsiTreeUtil;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 //copy from com.intellij.ide.hierarchy.call.JavaCallHierarchyProvider
 public class CallHierarchyProvider implements HierarchyProvider {
@@ -23,11 +28,35 @@ public class CallHierarchyProvider implements HierarchyProvider {
     @Override
     public PsiElement getTarget(@NotNull DataContext dataContext) {
         Project project = CommonDataKeys.PROJECT.getData(dataContext);
-        if (project == null)
-            return null;
-        PsiElement element = CommonDataKeys.PSI_ELEMENT.getData(dataContext);
-        if (element == null)
-            return null;
+        if (project != null) {
+            PsiElement element = CommonDataKeys.PSI_ELEMENT.getData(dataContext);
+            if (element != null) {
+                return ensureElement(element);
+            }
+            Editor editor = CommonDataKeys.EDITOR.getData(dataContext);
+            if (editor != null) {
+                PsiFile psiFile = getPsiFile(dataContext, project);
+                if (psiFile != null) {
+                    int offset = editor.getCaretModel().getOffset();
+                    return ensureElement(psiFile.findElementAt(offset));
+                }
+            }
+        }
+        return null;
+    }
+
+    private static @Nullable PsiFile getPsiFile(@NotNull DataContext dataContext, Project project) {
+        PsiFile psiFile = CommonDataKeys.PSI_FILE.getData(dataContext);
+        if(psiFile == null) {
+            VirtualFile vFile = dataContext.getData(CommonDataKeys.VIRTUAL_FILE);
+            if(vFile != null) {
+                psiFile = PsiManager.getInstance(project).findFile(vFile);
+            }
+        }
+        return psiFile;
+    }
+
+    private static @Nullable PsiElement ensureElement(PsiElement element) {
         if (element instanceof PsiField)
             return element;
         PsiMethod method = PsiTreeUtil.getParentOfType(element, PsiMethod.class, false);

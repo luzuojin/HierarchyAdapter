@@ -54,6 +54,10 @@ public class CallerMethodsTreeStructure extends HierarchyTreeStructure {
         return e instanceof PsiNewExpression || e.getParent() instanceof PsiNewExpression;
     }
 
+    protected boolean searchClassConstructor() {
+        return true;
+    }
+
     protected PsiElement getBaseMemberContainingClass(PsiMember e) {
         return  e instanceof PsiClass ? e : e.getContainingClass();
     }
@@ -68,12 +72,14 @@ public class CallerMethodsTreeStructure extends HierarchyTreeStructure {
 
         if(enclosingElement instanceof PsiClass) {
             PsiClass psiClass = (PsiClass) enclosingElement;
-            //search by constructors
-            Object[] children = Arrays.stream(psiClass.getConstructors()).map(e -> new CallHierarchyNodeDescriptor(myProject, nodeDescriptor, e, false, false)).toArray();
-            if(children.length > 0) return children;
-            //search by sub classes;
-            children = ClassInheritorsSearch.search(psiClass).findAll().stream().map(e -> new CallHierarchyNodeDescriptor(myProject, nodeDescriptor, e, false, false)).toArray();
-            if(children.length > 0) return children;
+            if(searchClassConstructor()) {
+                //search by constructors
+                Object[] children = Arrays.stream(psiClass.getConstructors()).map(e -> new CallHierarchyNodeDescriptor(myProject, nodeDescriptor, e, false, false)).toArray();
+                if(children.length > 0) return children;
+                //search by sub classes;
+                children = ClassInheritorsSearch.search(psiClass).findAll().stream().map(e -> new CallHierarchyNodeDescriptor(myProject, nodeDescriptor, e, false, false)).toArray();
+                if(children.length > 0) return children;
+            }
             //search by reference
             return ReferencesSearch.search(psiClass, psiClass.getUseScope()).findAll().stream().map(PsiReference::getElement).filter(this::isClassReferenceMatched).distinct().map(e -> new CallHierarchyNodeDescriptor(myProject, nodeDescriptor, e, false, false)).toArray();
         }
