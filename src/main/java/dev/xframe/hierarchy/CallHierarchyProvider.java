@@ -15,10 +15,13 @@ import com.intellij.psi.PsiClass;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiField;
 import com.intellij.psi.PsiFile;
+import com.intellij.psi.PsiJavaCodeReferenceElement;
 import com.intellij.psi.PsiManager;
 import com.intellij.psi.PsiMember;
 import com.intellij.psi.PsiMethod;
+import com.intellij.psi.PsiParameter;
 import com.intellij.psi.util.PsiTreeUtil;
+import com.intellij.psi.util.PsiUtil;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -59,9 +62,19 @@ public class CallHierarchyProvider implements HierarchyProvider {
     private static @Nullable PsiElement ensureElement(PsiElement element) {
         if (element instanceof PsiField)
             return element;
+        PsiJavaCodeReferenceElement codeRef = PsiTreeUtil.getParentOfType(element, PsiJavaCodeReferenceElement.class, false);
+        if(codeRef != null) {
+            PsiElement resolved = codeRef.resolve();
+            if(resolved instanceof PsiClass) return resolved;
+        }
+        PsiParameter parameter = PsiTreeUtil.getParentOfType(element, PsiParameter.class, false);
+        if(parameter != null) {
+            PsiClass resolved = PsiUtil.resolveClassInType(parameter.getType());
+            if(resolved != null) return resolved;
+        }
         PsiMethod method = PsiTreeUtil.getParentOfType(element, PsiMethod.class, false);
-        if (method != null)
-            return method;
+        if (method != null) return method;
+
         return PsiTreeUtil.getParentOfType(element, PsiClass.class, false);
     }
 
